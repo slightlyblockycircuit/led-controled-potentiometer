@@ -1,0 +1,23 @@
+const int POT_PIN = 34;   // ADC1, input-only, WiFi-safe
+const int LED_PIN = 5;    // PWM out
+
+float smooth = 0;
+
+void setup() {
+  Serial.begin(115200);
+  analogReadResolution(12);                 // 0..4095
+  ledcAttach(LED_PIN, 5000, 8);             // 5kHz, 8-bit -> 0..255
+}
+
+void loop() {
+  int raw = analogRead(POT_PIN);
+
+  smooth = smooth * 0.85 + raw * 0.15;      // kills ADC jitter (no flicker)
+  float norm = smooth / 4095.0;
+
+  int duty = (int)(pow(norm, 2.2) * 255.0); // gamma: matches your eye
+  ledcWrite(LED_PIN, duty);
+
+  Serial.printf("raw=%4d  duty=%3d\n", raw, duty);
+  delay(20);
+}
